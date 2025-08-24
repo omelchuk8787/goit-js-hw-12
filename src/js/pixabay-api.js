@@ -6,7 +6,7 @@ export let MAX_PAGE = 1;
 export async function getImagesByQuery(query, page) {
   axios.defaults.baseURL = 'https://pixabay.com';
   const params = {
-    key: '51707366-c8695cacd8b805538752cece0',
+    key: '49676421-fbb984ce693a0b40b5728e81f',
     q: `${query}`,
     image_type: 'photo',
     orientation: 'horizontal',
