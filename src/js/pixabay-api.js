@@ -1,45 +1,46 @@
 import axios from 'axios';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
-import { hideLoader } from './render-functions';
+export let MAX_PAGE = 1;
 
-export function getImagesByQuery(query) {
+export async function getImagesByQuery(query, page) {
   axios.defaults.baseURL = 'https://pixabay.com';
   const params = {
-    key: '49676421-fbb984ce693a0b40b5728e81f',
+    key: '51707366-c8695cacd8b805538752cece0',
     q: `${query}`,
     image_type: 'photo',
     orientation: 'horizontal',
     safesearch: true,
-    per_page: 21,
-    page: 1,
+    per_page: 15,
+    page: page,
   };
-  return axios
-    .get('/api/', { params })
-    .then(res => {
-      const images = res.data.hits;
-      console.log(images);
-      if (images && Array.isArray(images) && images.length > 0) {
-        return images;
-      } else {
-        return iziToast.show({
-          title: '❌',
-          message:
-            'Sorry, there are no images matching <br> your search query. Please try again!',
-          color: 'red',
-          position: 'topRight',
-          messageColor: 'white',
-          titleColor: 'white',
-        });
-      }
-    })
-    .catch(error => {
-      iziToast.show({
-        title: 'Error',
-        message: error.message,
+
+  try {
+    const res = await axios.get('/api/', { params });
+    MAX_PAGE = Math.ceil(res.data.totalHits / params.per_page);
+
+    const images = res.data.hits;
+    if (images && Array.isArray(images) && images.length > 0) {
+      return images;
+    } else {
+      return iziToast.show({
+        title: '❌',
+        message:
+          'Sorry, there are no images matching <br> your search query. Please try again!',
+        color: 'red',
+        position: 'topRight',
+        messageColor: 'white',
+        titleColor: 'white',
       });
-    })
-    .finally(() => {
-      hideLoader();
+    }
+  } catch (error) {
+    iziToast.show({
+      title: 'Error',
+      color: 'red',
+      position: 'topRight',
+      messageColor: 'white',
+      titleColor: 'white',
+      message: error.message,
     });
+  }
 }

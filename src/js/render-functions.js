@@ -1,9 +1,12 @@
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import { MAX_PAGE } from './pixabay-api';
+import iziToast from 'izitoast';
 
 const spanEl = document.querySelector('.loader');
 const ulElem = document.querySelector('.gallery');
-console.log(spanEl);
+const btnLdMrEl = document.querySelector('.load-more');
+
 if (spanEl) {
   spanEl.hidden = true;
 }
@@ -20,16 +23,60 @@ export function createGallery(images) {
   gallery.refresh();
 }
 
+export function updateGallery(images) {
+  const markup = templatesImage(images);
+  ulElem.insertAdjacentHTML('beforeend', markup);
+
+  gallery.refresh();
+}
+
 export function clearGallery() {
   ulElem.innerHTML = ``;
 }
 
-export function showLoader() {
+export function showLoader(currentPage) {
   spanEl.hidden = false;
+  if (currentPage > 1) {
+    spanEl.classList.add('load-more-loader');
+  }
 }
 
 export function hideLoader() {
   spanEl.hidden = true;
+}
+
+export function checkVisibleLoadBtn(currentPage) {
+  if (currentPage < MAX_PAGE) {
+    showLoadMoreButton();
+  } else if (MAX_PAGE) {
+    hideLoadMoreButton();
+    iziToast.info({
+      message: `We're sorry, but you've reached the end of search results.`,
+      color: 'blue',
+      position: 'topRight',
+      messageColor: 'black',
+    });
+  }
+}
+
+export function scrollAfterUpdate() {
+  const cardEl = ulElem.querySelector('.gallery-item');
+
+  let rect = cardEl.getBoundingClientRect();
+
+  window.scrollBy({
+    top: rect.height * 2,
+    left: 0,
+    behavior: 'smooth',
+  });
+}
+
+function showLoadMoreButton() {
+  btnLdMrEl.classList.add('is-visible');
+}
+
+export function hideLoadMoreButton() {
+  btnLdMrEl.classList.remove('is-visible');
 }
 
 function templateImage(img) {
@@ -59,6 +106,5 @@ function templateImage(img) {
 }
 
 function templatesImage(imgs) {
-  console.log('imgs = ', imgs);
   return imgs.map(templateImage).join('\n');
 }

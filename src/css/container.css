@@ -65,6 +65,16 @@ button {
   color: #fff;
 }
 
+.load-more {
+  display: none;
+  margin: 0 auto;
+  width: 125px;
+}
+
+.is-visible {
+  display: block;
+}
+
 button:hover {
   background-color: #6c8cff;
 }

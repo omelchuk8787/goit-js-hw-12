@@ -1,27 +1,82 @@
+import { getImagesByQuery } from './js/pixabay-api';
+import {
+  checkVisibleLoadBtn,
+  clearGallery,
+  createGallery,
+  hideLoader,
+  scrollAfterUpdate,
+  showLoader,
+  updateGallery,
+  hideLoadMoreButton,
+} from './js/render-functions';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
-import { getImagesByQuery } from './js/pixabay-api';
-import { clearGallery, createGallery, showLoader } from './js/render-functions';
 
 const formEl = document.querySelector('.form');
-const buttonEl = formEl.querySelector('button');
+const btnLdMrEl = document.querySelector('.load-more');
 
-formEl.addEventListener('input', e => {
-  const query = e.currentTarget.elements['search-text'].value.trim();
+let currentPage;
+let query;
+
+formEl.addEventListener('submit', async e => {
+  e.preventDefault();
+  query = e.currentTarget.elements['search-text'].value.trim();
   if (!query) {
-    buttonEl.disabled = true;
-  } else {
-    buttonEl.disabled = false;
+    return iziToast.info({
+      message: 'Введіть запит',
+      color: 'red',
+      position: 'topRight',
+      messageColor: 'white',
+      titleColor: 'white',
+    });
+  }
+  clearGallery();
+  hideLoadMoreButton();
+  currentPage = 1;
+
+  try {
+    showLoader(currentPage);
+    const images = await getImagesByQuery(query, currentPage);
+
+    if (images.length !== 0) {
+      createGallery(images);
+    }
+  } catch (error) {
+    iziToast.error({
+      message: error.message,
+      color: 'red',
+      position: 'topRight',
+      messageColor: 'white',
+      titleColor: 'white',
+    });
+    hideLoadMoreButton();
+  } finally {
+    hideLoader();
+    checkVisibleLoadBtn(currentPage);
   }
 });
 
-formEl.addEventListener('submit', e => {
-  e.preventDefault();
-  const query = e.currentTarget.elements['search-text'].value.trim();
-  if (e.currentTarget.nodeName == 'BUTTON') return;
-  clearGallery();
-  showLoader();
-  getImagesByQuery(query)
-    .then(images => createGallery(images))
-    .catch(error => console.error(error));
+btnLdMrEl.addEventListener('click', async e => {
+  currentPage += 1;
+  hideLoadMoreButton();
+  try {
+    showLoader(currentPage);
+    const images = await getImagesByQuery(query, currentPage);
+    if (images.length > 0) {
+      updateGallery(images);
+      scrollAfterUpdate();
+    }
+  } catch (error) {
+    iziToast.error({
+      message: error.message,
+      color: 'red',
+      position: 'topRight',
+      messageColor: 'white',
+      titleColor: 'white',
+    });
+    hideLoadMoreButton();
+  } finally {
+    hideLoader();
+    checkVisibleLoadBtn(currentPage);
+  }
 });

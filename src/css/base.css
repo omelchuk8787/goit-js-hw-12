@@ -60,6 +60,11 @@ main:has(.back-link) {
   animation-delay: 0.4s;
 }
 
+.load-more-loader:before,
+.load-more-loader:after {
+  top: revert;
+}
+
 @keyframes rotate {
   0% {
     transform: translate(-50%, -50%) rotateZ(0deg);
