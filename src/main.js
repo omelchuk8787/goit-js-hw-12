@@ -1,4 +1,4 @@
-import { getImagesByQuery } from './js/pixabay-api';
+import { getImagesByQuery, MAX_PAGE } from './js/pixabay-api';
 import {
   checkVisibleLoadBtn,
   clearGallery,
@@ -21,6 +21,7 @@ let query;
 formEl.addEventListener('submit', async e => {
   e.preventDefault();
   query = e.currentTarget.elements['search-text'].value.trim();
+
   if (!query) {
     return iziToast.info({
       message: 'Введіть запит',
@@ -30,16 +31,27 @@ formEl.addEventListener('submit', async e => {
       titleColor: 'white',
     });
   }
+
   clearGallery();
   hideLoadMoreButton();
   currentPage = 1;
 
   try {
     showLoader(currentPage);
-    const images = await getImagesByQuery(query, currentPage);
+    const { hits, totalHits, error } = await getImagesByQuery(query, currentPage);
 
-    if (images.length !== 0) {
-      createGallery(images);
+    if (error) return;
+    if (hits.length > 0) {
+      createGallery(hits);
+
+      // якщо всі результати влізли на одну сторінку → сховати кнопку
+      if (currentPage >= MAX_PAGE) {
+        hideLoadMoreButton();
+        iziToast.info({
+          message: "You've reached the end of search results.",
+          position: 'topRight',
+        });
+      }
     }
   } catch (error) {
     iziToast.error({
@@ -59,12 +71,24 @@ formEl.addEventListener('submit', async e => {
 btnLdMrEl.addEventListener('click', async e => {
   currentPage += 1;
   hideLoadMoreButton();
+
   try {
     showLoader(currentPage);
-    const images = await getImagesByQuery(query, currentPage);
-    if (images.length > 0) {
-      updateGallery(images);
+    const { hits, error } = await getImagesByQuery(query, currentPage);
+
+    if (error) return;
+    if (hits.length > 0) {
+      updateGallery(hits);
       scrollAfterUpdate();
+
+      // якщо дійшли до останньої сторінки
+      if (currentPage >= MAX_PAGE) {
+        hideLoadMoreButton();
+        iziToast.info({
+          message: "You've reached the end of search results.",
+          position: 'topRight',
+        });
+      }
     }
   } catch (error) {
     iziToast.error({
